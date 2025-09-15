@@ -5,20 +5,343 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Local CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" 
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" 
           crossorigin="anonymous">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <title>App</title>
+    <title>Product Review App</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .split {
+            height: 100vh;
+            width: 50%;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            overflow-x: hidden;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .left {
+            left: 0;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.03)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.04)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.1;
+        }
+
+        .right {
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .centered {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .centered img {
+            max-width: 80%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .centered img:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .sentiment-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            color: white;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sentiment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .sentiment-card:hover::before {
+            left: 100%;
+        }
+
+        .sentiment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .positive-sentiment {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+
+        .negative-sentiment {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+
+        .sentiment-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            opacity: 0.9;
+        }
+
+        .sentiment-text {
+            font-size: 18px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control {
+            border: 2px solid #e1e8ed;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(248, 249, 250, 0.8);
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .reviews-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .reviews-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .reviews-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .reviews-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        .review-item {
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .review-item:hover {
+            background: white;
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .reviews-header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #667eea, transparent);
+            margin: 20px 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .floating-elements span {
+            position: absolute;
+            display: block;
+            list-style: none;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            animation: animate 25s linear infinite;
+            bottom: -150px;
+        }
+
+        @keyframes animate {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+                border-radius: 0;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+                border-radius: 50%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .split {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            
+            .left {
+                height: 40vh;
+            }
+            
+            .right {
+                height: auto;
+                min-height: 60vh;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <!-- Left Split -->
     <div class="split left">
+        <div class="floating-elements">
+            <span style="left: 25%; animation-delay: 0s;"></span>
+            <span style="left: 10%; animation-delay: 2s; animation-duration: 12s;"></span>
+            <span style="left: 70%; animation-delay: 4s;"></span>
+            <span style="left: 40%; animation-delay: 6s; animation-duration: 18s;"></span>
+            <span style="left: 65%; animation-delay: 8s;"></span>
+            <span style="left: 75%; animation-delay: 10s; animation-duration: 22s;"></span>
+        </div>
         <div class="centered">
             <img src="{{ url_for('static', filename='products/prod1.jpg') }}" alt="Product Image" class="img-fluid">
         </div>
@@ -28,36 +351,65 @@
     <div class="split right">
         <div class="container mt-5 mb-5">
             <div class="d-flex justify-content-center row">
-                <div class="d-flex flex-column col-md-8">
+                <div class="d-flex flex-column col-md-10">
 
                     <!-- Sentiments -->
-                    <div>
-                        <label>Positive Sentiments: {{ data.positive }}</label>
-                    </div>
-                    <div>
-                        <label>Negative Sentiments: {{ data.negative }}</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="sentiment-card positive-sentiment">
+                                <div class="sentiment-text">
+                                    <i class="fas fa-thumbs-up sentiment-icon"></i>
+                                    <div>
+                                        <div>Positive Sentiments</div>
+                                        <div style="font-size: 24px; font-weight: 700; margin-top: 5px;">{{ data.positive }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="sentiment-card negative-sentiment">
+                                <div class="sentiment-text">
+                                    <i class="fas fa-thumbs-down sentiment-icon"></i>
+                                    <div>
+                                        <div>Negative Sentiments</div>
+                                        <div style="font-size: 24px; font-weight: 700; margin-top: 5px;">{{ data.negative }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Form -->
-                    <div class="mt-3 mb-3">
+                    <div class="form-container">
+                        <h3 style="color: #2d3748; margin-bottom: 25px; text-align: center;">
+                            <i class="fas fa-edit" style="margin-right: 10px; color: #667eea;"></i>
+                            Share Your Review
+                        </h3>
                         <form method="post">
-                            <textarea name="text" class="form-control" rows="3" placeholder="Enter your review"></textarea>
-                            <button type="submit" class="btn btn-primary mt-2">Submit</button>
+                            <textarea name="text" class="form-control" rows="4" placeholder="Tell us about your experience with this product..."></textarea>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary mt-3">
+                                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
+                                    Submit Review
+                                </button>
+                            </div>
                         </form>
                     </div>
 
                     <!-- Reviews -->
-                    <div class="coment-bottom bg-white p-2 px-4">
+                    <div class="reviews-container">
+                        <h3 class="reviews-header">
+                            <i class="fas fa-comments" style="margin-right: 10px; color: #667eea;"></i>
+                            Customer Reviews
+                        </h3>
                         {% for review in data.reviews %}
-                        <div class="commented-section mt-2">
-                            <div class="d-flex flex-row align-items-center commented-user">
-                                <!-- You can add user info or avatar here -->
-                            </div>
-                            <div class="text-nowrap bd-highlight">
-                                <span>{{ review }}</span>
-                            </div>
+                        <div class="review-item">
+                            <p class="review-text">
+                                <i class="fas fa-quote-left" style="color: #667eea; margin-right: 10px; font-size: 14px;"></i>
+                                {{ review }}
+                                <i class="fas fa-quote-right" style="color: #667eea; margin-left: 10px; font-size: 14px;"></i>
+                            </p>
                         </div>
-                        <hr/>
                         {% endfor %}
                     </div>
 
